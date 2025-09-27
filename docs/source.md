@@ -82,7 +82,7 @@ And other dependencies:
 sudo apt-get install python-numpy swig python-dev python-wheel unzip
 ```
 
-If you would like to build with Tensorflow, include the `-DUSE_TF=ON` paramter to `cmake`:
+If you would like to build with Tensorflow, include the `-DUSE_TF=ON` parameter to `cmake`:
 ```
 cmake .. -DUSE_TF=ON -DCUDA_USE_STATIC_CUDA_RUNTIME=OFF
 ```
