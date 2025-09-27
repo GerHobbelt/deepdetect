@@ -120,7 +120,7 @@ if (APPLE)
     set(USE_CUDNN OFF)
     set(USE_CUDA_CV OFF)
 else()
-    set(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wextra ${FOPENMP} -fPIC -std=c++17 -Wl,--no-as-needed -ltcmalloc_minimal")
+    set(CMAKE_CXX_FLAGS "-g -O2 -Wall -Wextra ${FOPENMP} -fPIC -std=c++17 -Wl,--no-as-needed -Wno-dangling-reference -Wno-redundant-move -Wno-error=array-bounds -ltcmalloc_minimal")
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -931,7 +931,7 @@ if (USE_TORCH)
     set(TORCH_LIB_DEPS ${TORCH_LOCATION}/lib/libtorch.so ${TORCH_LOCATION}/lib/libtorch_cpu.so ${TORCH_LOCATION}/lib/libc10.so -llmdb)
 
     if (USE_TORCH_CPU_ONLY)
-      list(APPEND TORCH_LIB_DEPS iomp5)
+      list(APPEND TORCH_LIB_DEPS)
     else()
       list(APPEND TORCH_LIB_DEPS ${TORCH_LOCATION}/lib/libc10_cuda.so ${TORCH_LOCATION}/lib/libtorch_cuda.so)
     endif()
@@ -1065,19 +1065,19 @@ if (USE_TENSORRT)
     set(TENSORRT_INC_DIR /usr/include/x86_64-linux-gnu)
   endif()
 
-  if (NOT EXISTS "${TRTTESTDIR}/libnvinfer.so.8")
-    message(FATAL_ERROR "Could not find TensorRT ${TRTTESTDIR}/libnvinfer.so.8, please provide tensorRT location as TENSORRT_DIR or (TENSORRT_LIB_DIR _and_ TENSORRT_INC_DIR)")
+  if (NOT EXISTS "${TRTTESTDIR}/libnvinfer.so.10")
+    message(FATAL_ERROR "Could not find TensorRT ${TRTTESTDIR}/libnvinfer.so.10, please provide tensorRT location as TENSORRT_DIR or (TENSORRT_LIB_DIR _and_ TENSORRT_INC_DIR)")
   else()
-    message(STATUS "Found TensorRT libraries : ${TRTTESTDIR}/libnvinfer.so.8")
+    message(STATUS "Found TensorRT libraries : ${TRTTESTDIR}/libnvinfer.so.10")
   endif()
 
     set(TENSORRT_LIB_DIR ${CMAKE_BINARY_DIR}/tensorrt-oss/bin/ ${TENSORRT_LIB_DIR})
-	set(TENSORRT_LIBS nvinfer nvcaffeparser nvinfer_plugin nvonnxparser )
+	set(TENSORRT_LIBS nvinfer nvinfer_plugin nvonnxparser )
 
     if (NOT TENSORRT_VERSION)
-        if (EXISTS "${TRTTESTDIR}/libnvinfer.so.8")
-            set(TENSORRT_VERSION v8.6.1)
-            message(STATUS "Found TensorRT libraries version 8")
+        if (EXISTS "${TRTTESTDIR}/libnvinfer.so.10")
+            set(TENSORRT_VERSION v10.5.0)
+            message(STATUS "Found TensorRT libraries version 10")
         else()
             message(FATAL_ERROR "No supported TensorRT version found")
         endif()
@@ -1095,13 +1095,6 @@ if (USE_TENSORRT)
       list(APPEND TRT_FLAGS -DCMAKE_C_COMPILER=/usr/bin/cc)
     endif()
 
-	set(TRT_PATCHES_PATH ${CMAKE_BINARY_DIR}/patches/trt)
-	set(TRT_PATCHES
-      ${TRT_PATCHES_PATH}/0003-c++14.patch
-      ${TRT_PATCHES_PATH}/0009-fix_compil_order.patch
-      ${TRT_PATCHES_PATH}/0011-fix_plugin_makefile_cub.patch
-      )
-
     # Tensorrt uses its own protobuf version (3.0.0) and this cannot be overrided
     # At best we can set the version it will internally build
     set(TENSORRT_COMPLETE ${CMAKE_BINARY_DIR}/CMakeFiles/tensorrt-oss-complete)
@@ -1112,7 +1105,6 @@ if (USE_TENSORRT)
       GIT_TAG ${TENSORRT_VERSION}
       GIT_CONFIG advice.detachedHead=false
       UPDATE_DISCONNECTED 1
-      PATCH_COMMAND sh ${CMAKE_SOURCE_DIR}/cmake/patch_external.sh TENSORRT ${CMAKE_BINARY_DIR}/tensorrt-oss/src/tensorrt-oss-stamp tensorrt-oss-download tensorrt-oss-patch ${CMAKE_BINARY_DIR}/tensorrt-oss/src/tensorrt-oss ${TRT_PATCHES}
       CONFIGURE_COMMAND ""
       BUILD_COMMAND sh ${CMAKE_SOURCE_DIR}/cmake/build_external.sh TENSORRT ${CMAKE_BINARY_DIR}/tensorrt-oss ${TENSORRT_COMPLETE} src/tensorrt-oss src/tensorrt-oss-build ${N} all ${CMAKE_COMMAND} ${TRT_FLAGS}
       INSTALL_COMMAND ""
